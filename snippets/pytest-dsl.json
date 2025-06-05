@@ -1,0 +1,116 @@
+{
+  "打印关键字": {
+    "prefix": "打印",
+    "body": [
+      "[打印], 内容: \"$1\""
+    ],
+    "description": "打印消息到控制台"
+  },
+  "HTTP请求关键字": {
+    "prefix": "HTTP请求",
+    "body": [
+      "[HTTP请求], 客户端: \"$1\", 配置: '''",
+      "    method: $2",
+      "    url: $3",
+      "    headers:",
+      "        Authorization: \"Bearer ${api_key}\"",
+      "    asserts:",
+      "        - [\"status\", \"eq\", $4]",
+      "'''"
+    ],
+    "description": "HTTP请求模板"
+  },
+  "打印变量": {
+    "prefix": "打印变量",
+    "body": [
+      "[打印], 内容: \"$1: \\${$2}\""
+    ],
+    "description": "打印变量值"
+  },
+  "远程HTTP请求": {
+    "prefix": "api请求",
+    "body": [
+      "$1|[HTTP请求], 客户端: \"$2\", 配置: '''",
+      "    method: $3",
+      "    url: $4",
+      "    asserts:",
+      "        - [\"status\", \"eq\", $5]",
+      "'''"
+    ],
+    "description": "远程服务器HTTP请求模板"
+  },
+  "条件判断": {
+    "prefix": "if",
+    "body": [
+      "if $1 do",
+      "    $2",
+      "end"
+    ],
+    "description": "条件判断语句"
+  },
+  "条件判断带else": {
+    "prefix": "ifelse",
+    "body": [
+      "if $1 do",
+      "    $2",
+      "else",
+      "    $3",
+      "end"
+    ],
+    "description": "带else的条件判断语句"
+  },
+  "循环": {
+    "prefix": "for",
+    "body": [
+      "for $1 in $2 do",
+      "    $3",
+      "end"
+    ],
+    "description": "for循环语句"
+  },
+  "文件操作": {
+    "prefix": "写入文件",
+    "body": [
+      "[写入文件], 路径: \"$1\", 内容: '''",
+      "$2",
+      "'''"
+    ],
+    "description": "写入文件操作"
+  },
+  "数据库查询": {
+    "prefix": "SQL查询",
+    "body": [
+      "[执行SQL], 连接: \"$1\", 语句: '''",
+      "    $2",
+      "''', 结果变量: \"$3\""
+    ],
+    "description": "数据库查询操作"
+  },
+  "浏览器操作": {
+    "prefix": "打开浏览器",
+    "body": [
+      "$1|[打开浏览器], 浏览器: \"$2\", 无头模式: $3",
+      "$1|[访问页面], 地址: \"$4\""
+    ],
+    "description": "浏览器操作模板"
+  },
+  "变量赋值": {
+    "prefix": "变量",
+    "body": [
+      "$1 = $2"
+    ],
+    "description": "变量赋值"
+  },
+  "捕获结果": {
+    "prefix": "捕获",
+    "body": [
+      "$1 = [HTTP请求], 客户端: \"$2\", 配置: '''",
+      "    method: $3",
+      "    url: $4",
+      "    captures:",
+      "        $5: [\"$6\"]",
+      "'''"
+    ],
+    "description": "捕获HTTP请求结果"
+  }
+} 

@@ -1,0 +1,83 @@
+# Node.js 依赖
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# TypeScript 编译输出
+out/
+dist/
+*.js.map
+
+# VSCode 扩展构建产物
+*.vsix
+
+# 测试覆盖率报告
+coverage/
+*.lcov
+
+# 日志文件
+logs/
+*.log
+
+# 临时文件
+tmp/
+temp/
+.tmp/
+
+# 系统文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE 和编辑器配置
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# 环境变量文件
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python 相关 (如果项目中包含Python脚本)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# 缓存目录
+.cache/
+.parcel-cache/
+
+# 运行时生成的文件
+*.pid
+*.seed
+*.pid.lock
+
+# 测试输出
+test-results/
+.nyc_output/
+
+# 备份文件
+*.bak
+*.backup
+*~
+
+# OS 生成的文件
+desktop.ini 

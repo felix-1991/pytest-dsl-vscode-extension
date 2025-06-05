@@ -1,0 +1,445 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "pytest-DSL",
+    "patterns": [
+      {
+        "include": "#comments"
+      },
+      {
+        "include": "#metadata"
+      },
+      {
+        "include": "#remote-calls"
+      },
+      {
+        "include": "#keyword-calls"
+      },
+      {
+        "include": "#keywords"
+      },
+      {
+        "include": "#variables"
+      },
+      {
+        "include": "#control-flow"
+      },
+      {
+        "include": "#strings"
+      },
+      {
+        "include": "#numbers"
+      },
+      {
+        "include": "#operators"
+      },
+      {
+        "include": "#yaml-inline"
+      }
+    ],
+    "repository": {
+      "comments": {
+        "patterns": [
+          {
+            "name": "comment.line.number-sign.pytest-dsl",
+            "match": "#.*$"
+          }
+        ]
+      },
+      "metadata": {
+        "patterns": [
+          {
+            "name": "meta.annotation.pytest-dsl",
+            "match": "^@(name|description|tags|author|date|remote):",
+            "captures": {
+              "1": {
+                "name": "keyword.other.annotation.pytest-dsl"
+              }
+            }
+          },
+          {
+            "name": "meta.remote-import.pytest-dsl",
+            "match": "@remote:\\s*\"([^\"]+)\"\\s+as\\s+(\\w+)",
+            "captures": {
+              "1": {
+                "name": "string.quoted.double.url.pytest-dsl"
+              },
+              "2": {
+                "name": "variable.other.alias.pytest-dsl"
+              }
+            }
+          }
+        ]
+      },
+      "remote-calls": {
+        "patterns": [
+          {
+            "name": "meta.remote-call.pytest-dsl",
+            "begin": "(\\w+)\\|\\[([^\\]]+)\\]",
+            "end": "(?=^\\s*$|^\\s*[^\\s,]|^\\s*#)",
+            "beginCaptures": {
+              "1": {
+                "name": "entity.name.tag.remote-server.pytest-dsl"
+              },
+              "2": {
+                "name": "entity.name.function.pytest-dsl"
+              }
+            },
+            "patterns": [
+              {
+                "include": "#keyword-parameters"
+              },
+              {
+                "include": "#strings"
+              },
+              {
+                "include": "#variables"
+              },
+              {
+                "include": "#numbers"
+              }
+            ]
+          }
+        ]
+      },
+      "keyword-calls": {
+        "patterns": [
+          {
+            "name": "meta.keyword-call.pytest-dsl",
+            "begin": "(?:^\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*=\\s*)?(?:(\\w+)\\|)?\\[([^\\]]+)\\]",
+            "end": "(?=^\\s*$|^\\s*[a-zA-Z_]|^\\s*#|^\\s*if\\b|^\\s*for\\b|^\\s*while\\b)",
+            "beginCaptures": {
+              "1": {
+                "name": "variable.other.capture.pytest-dsl"
+              },
+              "2": {
+                "name": "entity.name.tag.remote-server.pytest-dsl"
+              },
+              "3": {
+                "name": "entity.name.function.pytest-dsl"
+              }
+            },
+            "patterns": [
+              {
+                "include": "#keyword-parameters"
+              },
+              {
+                "include": "#strings"
+              },
+              {
+                "include": "#variables"
+              },
+              {
+                "include": "#numbers"
+              },
+              {
+                "include": "#comments"
+              }
+            ]
+          }
+        ]
+      },
+      "keyword-parameters": {
+        "patterns": [
+          {
+            "name": "meta.parameter.pytest-dsl",
+            "match": ",\\s*([a-zA-Z_\\u4e00-\\u9fff][a-zA-Z0-9_\\u4e00-\\u9fff-]*)\\s*:",
+            "captures": {
+              "1": {
+                "name": "variable.parameter.pytest-dsl"
+              }
+            }
+          },
+          {
+            "name": "meta.parameter.pytest-dsl", 
+            "match": "^\\s*([a-zA-Z_\\u4e00-\\u9fff][a-zA-Z0-9_\\u4e00-\\u9fff-]*)\\s*:",
+            "captures": {
+              "1": {
+                "name": "variable.parameter.pytest-dsl"
+              }
+            }
+          },
+          {
+            "name": "meta.parameter-continuation.pytest-dsl",
+            "match": "\\s+([a-zA-Z_\\u4e00-\\u9fff][a-zA-Z0-9_\\u4e00-\\u9fff-]*)\\s*:",
+            "captures": {
+              "1": {
+                "name": "variable.parameter.pytest-dsl"
+              }
+            }
+          }
+        ]
+      },
+      "keywords": {
+        "patterns": [
+          {
+            "name": "entity.name.function.keyword.pytest-dsl",
+            "match": "\\[([^\\]]+)\\]",
+            "captures": {
+              "1": {
+                "name": "entity.name.function.pytest-dsl"
+              }
+            }
+          }
+        ]
+      },
+      "variables": {
+        "patterns": [
+          {
+            "name": "variable.other.pytest-dsl",
+            "match": "\\$\\{([^}]+)\\}",
+            "captures": {
+              "1": {
+                "name": "variable.parameter.pytest-dsl"
+              }
+            }
+          },
+          {
+            "name": "variable.other.assignment.pytest-dsl",
+            "match": "^\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*=(?!\\s*(?:\\w+\\|)?\\[)",
+            "captures": {
+              "1": {
+                "name": "variable.other.pytest-dsl"
+              }
+            }
+          }
+        ]
+      },
+      "control-flow": {
+        "patterns": [
+          {
+            "name": "keyword.control.pytest-dsl",
+            "match": "\\b(if|else|do|end|for|while|break|continue|in|contains)\\b"
+          }
+        ]
+      },
+      "strings": {
+        "patterns": [
+          {
+            "name": "string.quoted.triple.pytest-dsl",
+            "begin": "'''",
+            "end": "'''",
+            "beginCaptures": {
+              "0": { "name": "punctuation.definition.string.begin.pytest-dsl" }
+            },
+            "endCaptures": {
+              "0": { "name": "punctuation.definition.string.end.pytest-dsl" }
+            },
+            "patterns": [
+              {
+                "include": "#yaml-content"
+              },
+              {
+                "include": "#variables"
+              },
+              {
+                "include": "#yaml-arrays"
+              },
+              {
+                "include": "#yaml-comments"
+              },
+              {
+                "include": "#yaml-nested-objects"
+              }
+            ]
+          },
+          {
+            "name": "string.quoted.double.pytest-dsl",
+            "begin": "\"",
+            "end": "\"",
+            "beginCaptures": {
+              "0": { "name": "punctuation.definition.string.begin.pytest-dsl" }
+            },
+            "endCaptures": {
+              "0": { "name": "punctuation.definition.string.end.pytest-dsl" }
+            },
+            "patterns": [
+              {
+                "name": "constant.character.escape.pytest-dsl",
+                "match": "\\\\."
+              },
+              {
+                "include": "#variables"
+              }
+            ]
+          },
+          {
+            "name": "string.quoted.single.pytest-dsl",
+            "begin": "'",
+            "end": "'",
+            "beginCaptures": {
+              "0": { "name": "punctuation.definition.string.begin.pytest-dsl" }
+            },
+            "endCaptures": {
+              "0": { "name": "punctuation.definition.string.end.pytest-dsl" }
+            },
+            "patterns": [
+              {
+                "name": "constant.character.escape.pytest-dsl",
+                "match": "\\\\."
+              }
+            ]
+          }
+        ]
+      },
+      "yaml-content": {
+        "patterns": [
+          {
+            "name": "entity.name.tag.yaml.pytest-dsl",
+            "match": "^\\s*([a-zA-Z_][a-zA-Z0-9_-]*)\\s*:",
+            "captures": {
+              "1": { "name": "entity.name.tag.yaml.pytest-dsl" }
+            }
+          },
+          {
+            "name": "string.quoted.double.yaml.pytest-dsl",
+            "match": ":\\s*(\"[^\"]*\")",
+            "captures": {
+              "1": { "name": "string.quoted.double.yaml.pytest-dsl" }
+            }
+          },
+          {
+            "name": "string.quoted.single.yaml.pytest-dsl",
+            "match": ":\\s*('[^']*')",
+            "captures": {
+              "1": { "name": "string.quoted.single.yaml.pytest-dsl" }
+            }
+          },
+          {
+            "name": "constant.numeric.yaml.pytest-dsl",
+            "match": ":\\s*(\\d+(?:\\.\\d+)?)",
+            "captures": {
+              "1": { "name": "constant.numeric.yaml.pytest-dsl" }
+            }
+          },
+          {
+            "name": "constant.language.boolean.yaml.pytest-dsl",
+            "match": ":\\s*(true|false|yes|no|on|off)",
+            "captures": {
+              "1": { "name": "constant.language.boolean.yaml.pytest-dsl" }
+            }
+          },
+          {
+            "name": "constant.language.null.yaml.pytest-dsl",
+            "match": ":\\s*(null|~)",
+            "captures": {
+              "1": { "name": "constant.language.null.yaml.pytest-dsl" }
+            }
+          },
+          {
+            "name": "string.unquoted.yaml.pytest-dsl",
+            "match": ":\\s*([^\\[\\]{}\"'\\n]+?)(?=\\s*$|\\s*#)",
+            "captures": {
+              "1": { "name": "string.unquoted.yaml.pytest-dsl" }
+            }
+          }
+        ]
+      },
+      "yaml-nested-objects": {
+        "patterns": [
+          {
+            "name": "meta.yaml-object.pytest-dsl",
+            "begin": "^\\s+([a-zA-Z_][a-zA-Z0-9_-]*)\\s*:",
+            "end": "(?=^\\s*[a-zA-Z_]|^\\s*$)",
+            "beginCaptures": {
+              "1": { "name": "entity.name.tag.yaml.pytest-dsl" }
+            },
+            "patterns": [
+              {
+                "include": "#yaml-content"
+              },
+              {
+                "include": "#variables"
+              }
+            ]
+          }
+        ]
+      },
+      "yaml-arrays": {
+        "patterns": [
+          {
+            "name": "meta.array.yaml.pytest-dsl",
+            "begin": "^\\s*-\\s*",
+            "end": "$",
+            "beginCaptures": {
+              "0": { "name": "punctuation.definition.array.begin.yaml.pytest-dsl" }
+            },
+            "patterns": [
+              {
+                "name": "meta.array.item.yaml.pytest-dsl",
+                "begin": "\\[",
+                "end": "\\]",
+                "beginCaptures": {
+                  "0": { "name": "punctuation.definition.array.begin.yaml.pytest-dsl" }
+                },
+                "endCaptures": {
+                  "0": { "name": "punctuation.definition.array.end.yaml.pytest-dsl" }
+                },
+                "patterns": [
+                  {
+                    "name": "string.quoted.double.yaml.pytest-dsl",
+                    "match": "\"[^\"]*\""
+                  },
+                  {
+                    "name": "string.quoted.single.yaml.pytest-dsl", 
+                    "match": "'[^']*'"
+                  },
+                  {
+                    "name": "constant.numeric.yaml.pytest-dsl",
+                    "match": "\\d+(?:\\.\\d+)?"
+                  },
+                  {
+                    "name": "punctuation.separator.array.yaml.pytest-dsl",
+                    "match": ","
+                  }
+                ]
+              },
+              {
+                "include": "#variables"
+              }
+            ]
+          }
+        ]
+      },
+      "yaml-comments": {
+        "patterns": [
+          {
+            "name": "comment.line.number-sign.yaml.pytest-dsl",
+            "match": "#.*$"
+          }
+        ]
+      },
+      "yaml-inline": {
+        "patterns": [
+          {
+            "name": "meta.yaml-inline.pytest-dsl",
+            "match": "(\\w+):\\s*([^,\\]]+)",
+            "captures": {
+              "1": {
+                "name": "entity.name.tag.parameter.pytest-dsl"
+              },
+              "2": {
+                "name": "string.unquoted.parameter-value.pytest-dsl"
+              }
+            }
+          }
+        ]
+      },
+      "numbers": {
+        "patterns": [
+          {
+            "name": "constant.numeric.pytest-dsl",
+            "match": "\\b\\d+(\\.\\d+)?\\b"
+          }
+        ]
+      },
+      "operators": {
+        "patterns": [
+          {
+            "name": "keyword.operator.pytest-dsl",
+            "match": "(==|!=|<=|>=|<|>|\\+|\\-|\\*|\\/|=)"
+          }
+        ]
+      }
+    },
+    "scopeName": "source.pytest-dsl"
+  }

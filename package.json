@@ -1,0 +1,208 @@
+{
+  "name": "pytest-dsl-support",
+  "displayName": "pytest-DSL Support",
+  "description": "VSCode extension for pytest-DSL language support with keyword completion and UI editor",
+  "version": "0.1.0",
+  "publisher": "pytest-dsl",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/felix-1991/pytest-dsl-vscode-extension.git"
+  },
+  "bugs": {
+    "url": "https://github.com/felix-1991/pytest-dsl-vscode-extension/issues"
+  },
+  "homepage": "https://github.com/felix-1991/pytest-dsl-vscode-extension#readme",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets",
+    "Other"
+  ],
+  "keywords": [
+    "pytest",
+    "dsl", 
+    "testing",
+    "automation",
+    "python",
+    "test-framework",
+    "language-support",
+    "syntax-highlighting",
+    "autocompletion"
+  ],
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "activationEvents": [
+    "onLanguage:pytest-dsl",
+    "onCommand:pytest-dsl.showKeywords",
+    "onCommand:pytest-dsl.insertKeyword",
+    "onCommand:pytest-dsl.editKeyword",
+    "onCommand:pytest-dsl.refreshKeywords",
+    "onCommand:pytest-dsl.generateKeywordsFile"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "pytest-dsl",
+        "aliases": ["pytest-DSL", "dsl"],
+        "extensions": [".dsl", ".auto"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "pytest-dsl",
+        "scopeName": "source.pytest-dsl",
+        "path": "./syntaxes/pytest-dsl.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "pytest-dsl",
+        "path": "./snippets/pytest-dsl.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "pytest-dsl.showKeywords",
+        "title": "显示关键字列表",
+        "category": "pytest-DSL"
+      },
+      {
+        "command": "pytest-dsl.insertKeyword",
+        "title": "插入关键字",
+        "category": "pytest-DSL"
+      },
+      {
+        "command": "pytest-dsl.editKeyword",
+        "title": "编辑关键字",
+        "category": "pytest-DSL"
+      },
+      {
+        "command": "pytest-dsl.refreshKeywords",
+        "title": "刷新关键字缓存",
+        "category": "pytest-DSL"
+      },
+      {
+        "command": "pytest-dsl.generateKeywordsFile",
+        "title": "生成关键字JSON文件",
+        "category": "pytest-DSL"
+      }
+    ],
+          "menus": {
+        "editor/context": [
+          {
+            "when": "resourceExtname == '.dsl' || resourceExtname == '.auto'",
+            "command": "pytest-dsl.showKeywords",
+            "group": "pytest-dsl"
+          },
+          {
+            "when": "resourceExtname == '.dsl' || resourceExtname == '.auto'",
+            "command": "pytest-dsl.insertKeyword",
+            "group": "pytest-dsl"
+          }
+        ],
+                 "commandPalette": [
+           {
+             "command": "pytest-dsl.showKeywords"
+           },
+           {
+             "command": "pytest-dsl.insertKeyword"
+           },
+           {
+             "command": "pytest-dsl.editKeyword"
+           },
+           {
+             "command": "pytest-dsl.refreshKeywords"
+           },
+           {
+             "command": "pytest-dsl.generateKeywordsFile"
+           }
+         ]
+      },
+             "keybindings": [
+         {
+           "command": "pytest-dsl.showKeywords",
+           "key": "ctrl+alt+k",
+           "mac": "cmd+alt+k",
+           "when": "editorTextFocus && (resourceExtname == '.dsl' || resourceExtname == '.auto')"
+         },
+         {
+           "command": "pytest-dsl.insertKeyword",
+           "key": "ctrl+alt+i",
+           "mac": "cmd+alt+i",
+           "when": "editorTextFocus && (resourceExtname == '.dsl' || resourceExtname == '.auto')"
+         }
+       ],
+    "configuration": {
+      "title": "pytest-DSL",
+      "properties": {
+        "pytest-dsl.pythonPath": {
+          "type": "string",
+          "default": "python",
+          "description": "Python解释器路径"
+        },
+        "pytest-dsl.projectRoot": {
+          "type": "string",
+          "default": "",
+          "description": "pytest-dsl项目根目录路径（留空则自动检测）"
+        },
+        "pytest-dsl.enableAutoCompletion": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用关键字自动补全"
+        },
+        "pytest-dsl.cacheTimeout": {
+          "type": "number",
+          "default": 300,
+          "description": "关键字缓存超时时间（秒）"
+        },
+        "pytest-dsl.keywordsJsonPath": {
+          "type": "string",
+          "default": "",
+          "description": "关键字JSON文件路径（相对于项目根目录，留空则自动查找）"
+        },
+        "pytest-dsl.remoteServerEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用远程服务器支持"
+        },
+        "pytest-dsl.yamlConfigSupport": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用YAML配置支持"
+        },
+        "pytest-dsl.autoImportRemoteServers": {
+          "type": "boolean",
+          "default": false,
+          "description": "自动导入YAML文件中定义的远程服务器"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "eslint": "^8.28.0",
+    "typescript": "^4.9.4",
+    "@vscode/test-electron": "^2.2.0",
+    "vsce": "^2.15.0"
+  },
+  "dependencies": {}
+}

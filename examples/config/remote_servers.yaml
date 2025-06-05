@@ -1,0 +1,109 @@
+# pytest-dsl 远程服务器配置示例
+remote_servers:
+  # 主API服务器
+  main_api:
+    url: "http://localhost:8270/"
+    alias: "api"
+    api_key: "${API_SERVER_KEY}"
+    sync_config:
+      sync_global_vars: true
+      sync_yaml_vars: true
+  
+  # UI测试服务器
+  ui_server:
+    url: "http://localhost:8271/"
+    alias: "ui"
+    sync_config:
+      sync_global_vars: true
+      sync_yaml_vars: false
+  
+  # 备份服务器
+  backup_server:
+    url: "http://backup-host:8270/"
+    alias: "backup"
+    api_key: "backup_api_key"
+
+# 全局变量
+g_environment: "development"
+g_base_url: "https://api.dev.example.com"
+g_timeout: 30
+g_retry_count: 3
+g_debug: true
+
+# HTTP客户端配置
+http_clients:
+  default:
+    base_url: "${g_base_url}"
+    headers:
+      User-Agent: "pytest-dsl-test/1.0"
+      Accept: "application/json"
+      Content-Type: "application/json"
+    timeout: "${g_timeout}"
+    verify_ssl: false
+    session: true
+    retry:
+      count: "${g_retry_count}"
+      backoff_factor: 0.3
+  
+  auth_client:
+    base_url: "${g_base_url}"
+    headers:
+      Authorization: "Bearer ${API_TOKEN}"
+      User-Agent: "pytest-dsl-auth/1.0"
+    timeout: 60
+    verify_ssl: true
+
+# 测试数据
+test_data:
+  admin_user:
+    username: "admin"
+    password: "admin123"
+    email: "admin@example.com"
+  
+  normal_user:
+    username: "testuser"
+    password: "test123"
+    email: "test@example.com"
+  
+  test_urls:
+    - "/api/health"
+    - "/api/users"
+    - "/api/products"
+    - "/api/orders"
+
+# 数据库配置
+databases:
+  test_db:
+    host: "localhost"
+    port: 5432
+    database: "pytest_dsl_test"
+    username: "test_user"
+    password: "test_pass"
+    pool_size: 5
+  
+  redis:
+    host: "localhost"
+    port: 6379
+    database: 0
+    password: "${REDIS_PASSWORD}"
+
+# 浏览器配置（用于UI测试）
+browsers:
+  chrome:
+    headless: false
+    window_size: [1920, 1080]
+    options:
+      - "--no-sandbox"
+      - "--disable-dev-shm-usage"
+  
+  firefox:
+    headless: true
+    window_size: [1280, 720]
+
+# 邮件配置
+email:
+  smtp_server: "smtp.example.com"
+  port: 587
+  username: "${EMAIL_USER}"
+  password: "${EMAIL_PASSWORD}"
+  use_tls: true 
