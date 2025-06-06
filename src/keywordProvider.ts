@@ -10,11 +10,20 @@ export interface KeywordParameter {
     default?: any;
 }
 
+export interface SourceInfo {
+    type: string;
+    name: string;
+    display_name: string;
+    module: string;
+    plugin_module: string;
+}
+
 export interface Keyword {
     name: string;
     category: string;
     parameters: KeywordParameter[];
     documentation?: string;
+    source_info?: SourceInfo;
     remote?: {
         alias: string;
         original_name: string;

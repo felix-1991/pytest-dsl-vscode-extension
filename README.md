@@ -1,78 +1,116 @@
 # pytest-DSL VSCode 扩展
 
-这是一个为 pytest-DSL 语言提供支持的 VSCode 扩展，提供语法高亮、自动补全、关键字管理等功能。
+[![Version](https://img.shields.io/badge/version-0.1.1-blue.svg)](https://github.com/felix-1991/pytest-dsl-vscode-extension)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-## 功能特性
+一个强大的VSCode扩展，为pytest-DSL语言提供全面的开发支持，包括语法高亮、智能补全、关键字管理和可视化编辑器。
 
-### 🎨 语法高亮
-- 支持 `.dsl` 和 `.auto` 文件的语法高亮
-- 高亮显示关键字、变量、注释、控制流等语法元素
-- 支持元数据注解（@name、@description、@remote等）
-- 支持远程服务器调用语法（alias|[关键字]）
-- 支持三重引号字符串和YAML内联语法
-- 支持变量引用和捕获语法高亮
+## ✨ 主要功能
 
-### 🔧 关键字管理
-- **显示关键字列表** (`Ctrl+Alt+K` / `Cmd+Alt+K`)
-  - 查看所有可用的关键字
-  - 按类别筛选（内置、自定义、远程）
-  - 搜索和过滤功能
-  
-- **插入关键字** (`Ctrl+Alt+I` / `Cmd+Alt+I`)
-  - 快速插入关键字到当前光标位置
-  - 自动生成参数模板
-  - 智能光标定位
+### 🔧 核心功能
+- **语法高亮**: 完整的pytest-DSL语法高亮支持
+- **智能补全**: 基于关键字库的自动补全
+- **关键字管理**: 分类浏览、搜索和收藏关键字
+- **可视化编辑**: 图形化界面编辑关键字
 
-- **可视化编辑器**
-  - 图形化界面编辑关键字参数
-  - 实时预览生成的代码
-  - 参数验证和提示
+### 📊 关键字浏览器
+- **分层分类显示**: 按category自动分组（内置、自定义等）
+- **收藏夹功能**: 标记常用关键字，快速访问
+- **智能搜索**: 支持名称、分类、参数、说明的模糊搜索
+- **树状结构**: 清晰的层级展示，支持展开/折叠
 
-### ⚡ 自动补全
-- 输入 `[` 时自动触发关键字补全
-- 支持远程服务器调用语法补全（alias|[关键字]）
-- 智能参数补全和类型验证
-- 支持代码片段和Tab跳转
-- 内置丰富的代码片段模板
+### 🔍 智能功能
+- **参数模板生成**: 自动生成带参数的关键字模板
+- **多种插入方式**: 仅插入名称或完整参数模板
+- **上下文菜单**: 右键快速操作
+- **快捷键支持**: 高效的键盘操作
 
-### 🔄 数据管理
-- 从JSON文件读取关键字数据，提供稳定的关键字支持
-- 支持生成关键字JSON文件
-- 缓存关键字数据提高性能
-- 支持手动刷新关键字缓存
+### 📁 分类系统
+- **内置关键字** (🔧): pytest-dsl核心关键字
+- **自定义关键字** (🔍): 项目特定关键字
+- **收藏夹** (⭐): 个人收藏的常用关键字
 
-## 安装要求
+## 🚀 快速开始
 
-1. **VSCode** 1.74.0 或更高版本
-2. **关键字JSON文件** - 项目根目录下需要有关键字JSON文件
+### 安装
+1. 在VSCode扩展市场搜索"pytest-DSL Support"
+2. 点击安装并重新加载VSCode
+3. 打开.dsl或.auto文件即可自动激活
 
-## 安装方法
+### 配置关键字文件
+扩展需要关键字JSON文件来提供智能功能。支持以下文件名：
+- `keywords.json`
+- `pytest-dsl-keywords.json` 
+- `pytest_dsl_keywords.json`
+- `.pytest-dsl-keywords.json`
 
-### 方法一：从源码安装
+### 生成关键字文件
+如果项目中没有关键字文件，可以使用以下方式生成：
 
-1. 克隆或下载此项目
-2. 在项目目录中运行：
-   ```bash
-   npm install
-   npm run compile
-   ```
-3. 在 VSCode 中按 `F5` 启动扩展开发主机
-4. 或者打包安装：
-   ```bash
-   npm install -g vsce
-   vsce package
-   code --install-extension pytest-dsl-support-0.1.0.vsix
-   ```
+1. **命令面板**: `Ctrl+Shift+P` → "生成关键字JSON文件"
+2. **右键菜单**: 在.dsl文件中右键选择相应选项
+3. **关键字浏览器**: 点击工具栏中的刷新按钮
 
-### 方法二：开发模式
+## 🎯 使用指南
 
-1. 在 VSCode 中打开此项目
-2. 按 `F5` 启动扩展开发主机
-3. 在新窗口中测试扩展功能
+### 关键字浏览器
 
-## 配置选项
+扩展会在资源管理器中添加"pytest-DSL 关键字"面板，提供以下功能：
 
-在 VSCode 设置中可以配置以下选项：
+#### 浏览关键字
+- 展开分类查看所有关键字
+- 点击关键字预览详细信息
+- 查看参数数量和来源信息
+
+#### 搜索功能
+- **智能搜索**: `Ctrl+Alt+S` (Mac: `Cmd+Alt+S`)
+- **分类筛选**: `Ctrl+Alt+F` (Mac: `Cmd+Alt+F`)
+- 支持关键字名称、说明、参数的模糊匹配
+
+#### 收藏夹管理
+- 右键关键字选择"切换收藏状态"
+- 收藏的关键字显示在顶部收藏夹分类中
+- 插入关键字时优先显示收藏项
+
+### 插入关键字
+
+#### 基本插入
+- **快捷键**: `Ctrl+Alt+I` (Mac: `Cmd+Alt+I`)
+- **命令面板**: "插入关键字"
+- **右键菜单**: 在.dsl文件中右键选择
+
+#### 智能插入
+- **带参数模板**: `Ctrl+Alt+T` (Mac: `Cmd+Alt+T`)
+- 自动生成完整的参数结构
+- 使用VSCode的snippet功能，支持Tab键跳转
+
+示例插入效果：
+```dsl
+HTTP请求[
+    客户端=${1:default}
+    配置=${2:请求配置}
+    会话=${3:会话名称}
+    保存响应=${4:响应变量名}
+]
+```
+
+### 关键字管理
+
+#### 查看关键字列表
+- **快捷键**: `Ctrl+Alt+K` (Mac: `Cmd+Alt+K`)
+- 分类展示所有可用关键字
+- 显示参数数量和来源信息
+
+#### 编辑关键字
+- 在关键字浏览器中右键选择"编辑关键字"
+- 使用可视化编辑器修改关键字定义
+- 支持参数配置和文档编辑
+
+#### 刷新缓存
+- 修改关键字文件后自动检测更新
+- 手动刷新: 命令面板 → "刷新关键字缓存"
+
+## ⚙️ 配置选项
 
 ```json
 {
@@ -81,232 +119,136 @@
   "pytest-dsl.enableAutoCompletion": true,
   "pytest-dsl.cacheTimeout": 300,
   "pytest-dsl.keywordsJsonPath": "",
-  "pytest-dsl.remoteServerEnabled": true,
-  "pytest-dsl.yamlConfigSupport": true,
-  "pytest-dsl.autoImportRemoteServers": false
+  "pytest-dsl.treeViewAutoExpand": true,
+  "pytest-dsl.showParameterCount": true,
+  "pytest-dsl.enableSmartInsert": true,
+  "pytest-dsl.maxSearchResults": 50
 }
 ```
 
 ### 配置说明
+- `pythonPath`: Python解释器路径
+- `projectRoot`: 项目根目录（留空自动检测）
+- `enableAutoCompletion`: 启用自动补全
+- `cacheTimeout`: 关键字缓存超时时间（秒）
+- `keywordsJsonPath`: 关键字文件路径
+- `treeViewAutoExpand`: 自动展开收藏夹分类
+- `showParameterCount`: 显示参数数量
+- `enableSmartInsert`: 启用智能插入
+- `maxSearchResults`: 搜索结果最大数量
 
-- `pythonPath`: Python 解释器路径，默认为 "python"
-- `projectRoot`: pytest-dsl 项目根目录，留空则自动检测
-- `enableAutoCompletion`: 是否启用自动补全，默认为 true
-- `cacheTimeout`: 关键字缓存超时时间（秒），默认为 300
-- `keywordsJsonPath`: 关键字JSON文件路径（相对于项目根目录），留空则自动查找
-- `remoteServerEnabled`: 是否启用远程服务器支持，默认为 true
-- `yamlConfigSupport`: 是否启用YAML配置支持，默认为 true  
-- `autoImportRemoteServers`: 是否自动导入YAML文件中定义的远程服务器，默认为 false
+## 🎹 快捷键
 
-## 使用方法
+| 功能 | Windows/Linux | macOS |
+|------|---------------|-------|
+| 显示关键字列表 | `Ctrl+Alt+K` | `Cmd+Alt+K` |
+| 插入关键字 | `Ctrl+Alt+I` | `Cmd+Alt+I` |
+| 智能搜索 | `Ctrl+Alt+S` | `Cmd+Alt+S` |
+| 插入参数模板 | `Ctrl+Alt+T` | `Cmd+Alt+T` |
+| 分类筛选 | `Ctrl+Alt+F` | `Cmd+Alt+F` |
 
-### 1. 查看关键字列表
+## 📋 支持的关键字格式
 
-- 使用快捷键 `Ctrl+Alt+K` (Windows/Linux) 或 `Cmd+Alt+K` (Mac)
-- 或者在命令面板中搜索 "显示关键字列表"
-- 选择关键字查看详细信息
-
-### 2. 插入关键字
-
-- 使用快捷键 `Ctrl+Alt+I` (Windows/Linux) 或 `Cmd+Alt+I` (Mac)
-- 或者在命令面板中搜索 "插入关键字"
-- 选择要插入的关键字，自动生成代码模板
-
-### 3. 可视化编辑
-
-- 在关键字列表中选择 "编辑关键字"
-- 在图形界面中填写参数
-- 点击 "插入到编辑器" 生成代码
-
-### 4. 自动补全
-
-- 在 `.dsl` 文件中输入 `[` 触发关键字补全
-- 选择关键字后自动补全参数
-- 使用 Tab 键在参数间跳转
-
-### 5. 关键字数据管理
-
-#### 数据来源
-
-扩展只从项目根目录下的JSON文件读取关键字数据。如果找不到JSON文件，扩展会显示错误提示，指导用户创建关键字文件。
-
-#### 支持的JSON文件名
-
-扩展会自动查找以下文件名（按优先级排序）：
-- `pytest-dsl-keywords.json`
-- `keywords.json`
-- `pytest_dsl_keywords.json`
-- `.pytest-dsl-keywords.json`
-
-#### 生成关键字JSON文件
-
-如果您的项目中没有关键字JSON文件，可以通过以下方式生成：
-
-1. 确保您的Python环境中已安装pytest-dsl
-2. 在命令面板中搜索 "生成关键字JSON文件"
-3. 扩展会执行 `pytest-dsl-list` 命令并将结果保存为JSON文件
-4. 生成的文件将保存在项目根目录下
-
-#### 自定义JSON文件路径
-
-您可以在设置中指定自定义的JSON文件路径：
-
-```json
-{
-  "pytest-dsl.keywordsJsonPath": "config/my-keywords.json"
-}
-```
-
-#### JSON文件格式
-
-关键字JSON文件应包含以下结构（参考 `example-keywords.json`）：
+扩展支持以下JSON格式的关键字定义：
 
 ```json
 {
   "summary": {
-    "total_count": 总关键字数量,
+    "total_count": 99,
     "category_counts": {
-      "分类名": 该分类的关键字数量
+      "builtin": 18,
+      "custom": 81
     }
   },
   "keywords": [
     {
-      "name": "关键字名称",
-      "category": "关键字分类",
+      "name": "HTTP请求",
+      "category": "builtin",
+      "source_info": {
+        "type": "builtin",
+        "name": "pytest-dsl内置",
+        "display_name": "pytest-dsl内置",
+        "module": "pytest_dsl.keywords.http_keywords"
+      },
       "parameters": [
         {
-          "name": "参数显示名",
-          "mapping": "参数映射名",
-          "description": "参数描述"
+          "name": "客户端",
+          "mapping": "client",
+          "description": "客户端名称",
+          "default": "default"
         }
       ],
-      "documentation": "关键字说明文档",
-      "remote": {
-        "alias": "别名",
-        "original_name": "原始名称"
-      }
+      "documentation": "执行HTTP请求..."
     }
   ]
 }
 ```
 
-## 示例
+## 🔧 开发与贡献
 
-### DSL 文件示例
+### 本地开发
+```bash
+# 克隆仓库
+git clone https://github.com/felix-1991/pytest-dsl-vscode-extension.git
 
-```dsl
-@name: "HTTP请求测试"
-@description: "测试HTTP请求功能"
-@tags: ["http", "api"]
+# 安装依赖
+npm install
 
-# 设置变量
-base_url = "https://api.example.com"
+# 编译
+npm run compile
 
-# 发送HTTP请求
-[HTTP请求], 客户端: default, 配置: {
-    "request": {
-        "method": "GET",
-        "url": "${base_url}/users"
-    },
-    "assert": {
-        "status_code": 200
-    }
-}
-
-# 条件判断
-if response.status_code == 200 do
-    [打印], 内容: "请求成功"
-else
-    [打印], 内容: "请求失败"
-end
+# 打包
+npm run package
 ```
 
-## 故障排除
-
-### 常见问题
-
-1. **关键字列表为空**
-   - 检查是否存在关键字JSON文件
-   - 如果没有JSON文件，请使用"生成关键字JSON文件"命令创建
-   - 确认 pytest-dsl 已正确安装（用于生成JSON文件）
-   - 检查项目根目录配置
-
-2. **自动补全不工作**
-   - 确认文件扩展名为 `.dsl` 或 `.auto`
-   - 检查自动补全设置是否启用
-   - 尝试刷新关键字缓存
-
-3. **生成关键字文件失败**
-   - 检查 Python 路径配置
-   - 确认 pytest-dsl-list 命令可用
-   - 在dsl自动化项目根目录下执行 pytest-dsl-list命令生成keyword.json文件
-
-### 调试方法
-
-1. 打开 VSCode 开发者工具 (`Help > Toggle Developer Tools`)
-2. 查看控制台输出
-3. 检查扩展日志信息
-
-## 开发贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-### 开发环境设置
-
-1. 克隆项目：
-   ```bash
-   git clone <repository-url>
-   cd pytest-dsl-vscode-extension
-   ```
-
-2. 安装依赖：
-   ```bash
-   npm install
-   ```
-
-3. 编译代码：
-   ```bash
-   npm run compile
-   ```
-
-4. 启动开发：
-   ```bash
-   # 在 VSCode 中按 F5 启动扩展开发主机
-   ```
-
-### 项目结构
-
+### 目录结构
 ```
-pytest-dsl-vscode-extension/
-├── src/                    # TypeScript 源码
-│   ├── extension.ts        # 扩展主入口
-│   ├── keywordProvider.ts  # 关键字提供者
-│   ├── completionProvider.ts # 自动补全提供者
-│   └── keywordEditor.ts    # 可视化编辑器
-├── syntaxes/              # 语法高亮定义
-│   └── pytest-dsl.tmLanguage.json
-├── out/                   # 编译输出
-├── package.json           # 扩展配置
-├── tsconfig.json          # TypeScript 配置
-└── README.md             # 说明文档
+src/
+├── extension.ts          # 扩展主入口
+├── keywordProvider.ts    # 关键字数据提供者
+├── keywordTreeProvider.ts # 关键字树视图提供者
+├── completionProvider.ts # 自动补全提供者
+└── keywordEditor.ts      # 关键字编辑器
 ```
 
-## 测试扩展功能
+## 📝 更新日志
 
-### 测试正常工作流程
+### v0.1.1 (最新)
+- ✨ 新增关键字分类浏览器
+- ✨ 添加收藏夹功能
+- ✨ 智能搜索和过滤
+- ✨ 参数模板自动生成
+- ✨ 树状结构显示
+- ✨ 上下文菜单支持
+- 🔧 优化关键字加载性能
+- 🔧 增强错误处理机制
 
-1. 确保项目根目录下有关键字JSON文件（如 `keywords.json`）
-2. 打开一个 `.dsl` 文件
-3. 按 `Ctrl+Alt+K` (或 `Cmd+Alt+K`) 查看关键字列表
-4. 按 `Ctrl+Alt+I` (或 `Cmd+Alt+I`) 插入关键字
+### v0.1.0
+- 🎉 初始版本发布
+- 基础语法高亮
+- 关键字自动补全
+- 基本关键字管理
 
-### 测试错误提示功能
+## 🤝 贡献指南
 
-1. 临时重命名或删除关键字JSON文件
-2. 尝试使用关键字相关功能
-3. 应该看到错误提示，提示创建关键字文件
-4. 点击"生成关键字文件"按钮（需要pytest-dsl环境）
+欢迎提交Issue和Pull Request！
 
-## 许可证
+1. Fork 这个仓库
+2. 创建你的特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交你的更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 打开一个Pull Request
 
-MIT License
+## 📄 许可证
+
+本项目基于 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+## 📧 联系方式
+
+- **作者**: felix-1991
+- **仓库**: [GitHub](https://github.com/felix-1991/pytest-dsl-vscode-extension)
+- **问题反馈**: [Issues](https://github.com/felix-1991/pytest-dsl-vscode-extension/issues)
+
+---
+
+⭐ 如果这个扩展对你有帮助，请在GitHub上给个星标！
