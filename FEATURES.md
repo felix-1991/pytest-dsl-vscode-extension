@@ -1,5 +1,28 @@
 # pytest-DSL VSCode 扩展功能详解
 
+## ▶️ 单文件运行与步进调试
+
+- 编辑器标题、右键菜单和文件顶部 CodeLens 可直接运行或调试 `.dsl/.auto` 文件。
+- 可在可执行 DSL 步骤上选择“从此处调试”；起点之前的步骤仍会执行，但不会暂停。
+- 调试暂停后支持 `F10` 单步、`F5` 继续和 `Shift+F5` 停止，并高亮当前执行行。
+- 运行输出、错误输出、关键字跟踪和调试步骤状态统一写入 `pytest-DSL` 输出面板。
+- Python 解释器复用项目 `.venv/venv` 与 `pytest-dsl.pythonPath`；启动前会验证 `pytest_dsl.workbench.runner` 确实可用。
+- 状态栏 `Config` 选择器自动发现项目 YAML，支持多选、语法校验、项目级记忆和有序配置方案。
+- 当前配置统一用于运行、调试、变量补全和定义跳转；“自动”模式保留 pytest-dsl 默认加载规则。
+- “使用配置运行/调试…”支持单次临时选择，不覆盖项目默认选择。
+
+配置方案示例：
+
+```json
+{
+  "pytest-dsl.configProfiles": {
+    "local": ["config/base.yaml", "config/local.yaml"],
+    "test": ["config/base.yaml", "config/test.yaml"]
+  },
+  "pytest-dsl.activeConfigProfile": "local"
+}
+```
+
 ## 📊 关键字分类浏览器
 
 ### 🎯 核心特性
@@ -279,4 +302,4 @@ HTTP请求[
 
 ---
 
-💡 **提示**: 这些功能都是为了提高pytest-DSL开发效率而设计的。如果您有任何改进建议，欢迎提交Issue或Pull Request！ 
+💡 **提示**: 这些功能都是为了提高pytest-DSL开发效率而设计的。如果您有任何改进建议，欢迎提交Issue或Pull Request！

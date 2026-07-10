@@ -1,8 +1,22 @@
 import * as vscode from 'vscode';
 import { KeywordProvider, Keyword } from './keywordProvider';
+import {
+    METADATA_COMPLETION_TEMPLATES,
+    SourceDefinition,
+    buildKeywordSnippet,
+    buildParameterSnippet,
+    createParameterCompletionCandidates,
+    createVariableCompletionCandidates,
+    getCompletionContext,
+    uniqueKeywordsByName
+} from './languageService';
+import { WorkspaceDslIndex } from './languageFeatures';
 
 export class KeywordCompletionProvider implements vscode.CompletionItemProvider {
-    constructor(private keywordProvider: KeywordProvider) {}
+    constructor(
+        private keywordProvider: KeywordProvider,
+        private workspaceIndex?: WorkspaceDslIndex
+    ) {}
 
     async provideCompletionItems(
         document: vscode.TextDocument,
@@ -16,22 +30,36 @@ export class KeywordCompletionProvider implements vscode.CompletionItemProvider 
         }
 
         try {
-            const keywords = await this.keywordProvider.getKeywords();
             const line = document.lineAt(position);
             const lineText = line.text;
             const cursorPosition = position.character;
+            const completionContext = getCompletionContext(
+                lineText,
+                cursorPosition,
+                context.triggerKind === vscode.CompletionTriggerKind.Invoke
+            );
 
-            // 检查是否在关键字调用上下文中
-            if (this.isInKeywordContext(lineText, cursorPosition)) {
-                return this.createKeywordCompletions(keywords);
+            if (completionContext.kind === 'metadata') {
+                return this.createMetadataCompletions(document, position, completionContext);
             }
 
-            // 检查是否在参数上下文中
-            const keywordMatch = this.findKeywordInLine(lineText, cursorPosition);
-            if (keywordMatch) {
-                const keyword = keywords.find(k => k.name === keywordMatch.name);
+            if (completionContext.kind === 'variable') {
+                const definitions = this.workspaceIndex
+                    ? await this.workspaceIndex.getWorkspaceVariableDefinitions(document)
+                    : [];
+                return this.createVariableCompletions(definitions, document, position, completionContext);
+            }
+
+            const keywords = uniqueKeywordsByName(await this.keywordProvider.getKeywords()) as Keyword[];
+
+            if (completionContext.kind === 'keyword') {
+                return this.createKeywordCompletions(keywords, document, position, completionContext);
+            }
+
+            if (completionContext.kind === 'parameter' && completionContext.keywordName) {
+                const keyword = keywords.find(k => k.name === completionContext.keywordName);
                 if (keyword) {
-                    return this.createParameterCompletions(keyword, lineText, cursorPosition);
+                    return this.createParameterCompletions(keyword, document, position, completionContext);
                 }
             }
 
@@ -42,51 +70,13 @@ export class KeywordCompletionProvider implements vscode.CompletionItemProvider 
         }
     }
 
-    private isInKeywordContext(lineText: string, cursorPosition: number): boolean {
-        // 检查光标前是否有 '[' 字符（支持远程调用语法）
-        const beforeCursor = lineText.substring(0, cursorPosition);
-        const lastBracket = beforeCursor.lastIndexOf('[');
-        const lastCloseBracket = beforeCursor.lastIndexOf(']');
-        
-        // 检查是否在远程调用语法中：alias|[
-        const remoteCallMatch = beforeCursor.match(/(\w+)\|\[([^\]]*)$/);
-        if (remoteCallMatch) {
-            return true;
-        }
-        
-        // 如果最近的 '[' 在最近的 ']' 之后，说明在关键字名称上下文中
-        return lastBracket > lastCloseBracket;
-    }
-
-    private findKeywordInLine(lineText: string, cursorPosition: number): { name: string, start: number, end: number } | null {
-        // 支持普通关键字和远程调用关键字
-        const keywordRegex = /(?:(\w+)\|)?\[([^\]]+)\]/g;
-        let match;
-        
-        while ((match = keywordRegex.exec(lineText)) !== null) {
-            const keywordStart = match.index;
-            const keywordEnd = match.index + match[0].length;
-            const keywordName = match[2]; // 关键字名称（不包括远程服务器前缀）
-            
-            // 检查光标是否在这个关键字调用的参数部分
-            if (cursorPosition > keywordEnd) {
-                // 查找这个关键字后面的参数部分
-                const afterKeyword = lineText.substring(keywordEnd);
-                const paramMatch = afterKeyword.match(/^\s*,/);
-                if (paramMatch) {
-                    return {
-                        name: keywordName,
-                        start: keywordStart,
-                        end: keywordEnd
-                    };
-                }
-            }
-        }
-        
-        return null;
-    }
-
-    private createKeywordCompletions(keywords: Keyword[]): vscode.CompletionItem[] {
+    private createKeywordCompletions(
+        keywords: Keyword[],
+        document: vscode.TextDocument,
+        position: vscode.Position,
+        completionContext: ReturnType<typeof getCompletionContext>
+    ): vscode.CompletionItem[] {
+        const range = this.createCompletionRange(document, position, completionContext);
         return keywords.map(keyword => {
             const item = new vscode.CompletionItem(
                 keyword.name,
@@ -97,19 +87,11 @@ export class KeywordCompletionProvider implements vscode.CompletionItemProvider 
             item.detail = `[${this.getCategoryDisplayName(keyword.category)}] ${keyword.name}`;
             item.documentation = new vscode.MarkdownString(this.createKeywordDocumentation(keyword));
 
-            // 创建插入文本
-            if (keyword.parameters && keyword.parameters.length > 0) {
-                // 使用snippet格式，支持tab跳转
-                const params = keyword.parameters.map((param, index) => {
-                    // 如果参数有默认值，使用默认值，否则使用占位符
-                    const defaultValue = param.default !== undefined ? param.default : (param.description || '值');
-                    const displayValue = param.default !== undefined ? this.formatDefaultValue(param.default) : param.description || '值';
-                    return `${param.name}: \${${index + 1}:${displayValue}}`;
-                }).join(', ');
-                item.insertText = new vscode.SnippetString(`${keyword.name}], ${params}`);
-            } else {
-                item.insertText = `${keyword.name}]`;
-            }
+            item.insertText = new vscode.SnippetString(buildKeywordSnippet(keyword, {
+                inBracket: completionContext.inBracket
+            }));
+            item.range = range;
+            item.additionalTextEdits = this.createAutoClosedBracketEdits(document, position, completionContext);
 
             // 设置排序优先级（内置关键字优先）
             item.sortText = keyword.category === 'builtin' ? '0' + keyword.name : '1' + keyword.name;
@@ -121,20 +103,16 @@ export class KeywordCompletionProvider implements vscode.CompletionItemProvider 
         });
     }
 
-    private createParameterCompletions(keyword: Keyword, lineText: string, cursorPosition: number): vscode.CompletionItem[] {
-        if (!keyword.parameters || keyword.parameters.length === 0) {
-            return [];
-        }
-
-        // 分析已经输入的参数
-        const usedParams = this.parseUsedParameters(lineText, cursorPosition);
-        const availableParams = keyword.parameters.filter(param => 
-            !usedParams.includes(param.name)
-        );
-
-        return availableParams.map(param => {
+    private createParameterCompletions(
+        keyword: Keyword,
+        document: vscode.TextDocument,
+        position: vscode.Position,
+        completionContext: ReturnType<typeof getCompletionContext>
+    ): vscode.CompletionItem[] {
+        const range = this.createCompletionRange(document, position, completionContext);
+        return createParameterCompletionCandidates(keyword, completionContext.usedParameterNames).map(param => {
             const item = new vscode.CompletionItem(
-                param.name,
+                param.name || param.mapping || '',
                 vscode.CompletionItemKind.Property
             );
 
@@ -146,27 +124,71 @@ export class KeywordCompletionProvider implements vscode.CompletionItemProvider 
                 `**说明:** ${param.description || '无说明'}${defaultInfo}`
             );
 
-            // 插入参数名和冒号，如果有默认值则使用默认值
-            const defaultValue = param.default !== undefined ? this.formatDefaultValue(param.default) : (param.description || '值');
-            item.insertText = new vscode.SnippetString(`${param.name}: \${1:${defaultValue}}`);
-            item.filterText = param.name;
+            item.insertText = new vscode.SnippetString(buildParameterSnippet(param));
+            item.filterText = param.name || param.mapping || '';
+            item.range = range;
 
             return item;
         });
     }
 
-    private parseUsedParameters(lineText: string, cursorPosition: number): string[] {
-        // 简单的参数解析，查找已经使用的参数名
-        const beforeCursor = lineText.substring(0, cursorPosition);
-        const paramRegex = /(\w+)\s*:/g;
-        const usedParams: string[] = [];
-        let match;
+    private createMetadataCompletions(
+        document: vscode.TextDocument,
+        position: vscode.Position,
+        completionContext: ReturnType<typeof getCompletionContext>
+    ): vscode.CompletionItem[] {
+        const range = this.createCompletionRange(document, position, completionContext);
+        return METADATA_COMPLETION_TEMPLATES.map(template => {
+            const item = new vscode.CompletionItem(template.label, vscode.CompletionItemKind.Property);
+            item.detail = template.detail;
+            item.insertText = new vscode.SnippetString(template.snippet);
+            item.range = range;
+            return item;
+        });
+    }
 
-        while ((match = paramRegex.exec(beforeCursor)) !== null) {
-            usedParams.push(match[1]);
+    private createVariableCompletions(
+        definitions: SourceDefinition[],
+        document: vscode.TextDocument,
+        position: vscode.Position,
+        completionContext: ReturnType<typeof getCompletionContext>
+    ): vscode.CompletionItem[] {
+        const range = this.createCompletionRange(document, position, completionContext);
+        const lineText = document.lineAt(position).text;
+        const hasExistingClosingBrace = lineText.slice(position.character, position.character + 1) === '}';
+        return createVariableCompletionCandidates(definitions).map(definition => {
+            const item = new vscode.CompletionItem(definition.name, vscode.CompletionItemKind.Variable);
+            item.detail = definition.sourceLabel || `${definition.path}:${definition.line}`;
+            item.documentation = definition.valuePreview
+                ? new vscode.MarkdownString(`当前值: \`${definition.valuePreview}\``)
+                : undefined;
+            item.insertText = hasExistingClosingBrace ? definition.name : `${definition.name}}`;
+            item.range = range;
+            return item;
+        });
+    }
+
+    private createCompletionRange(
+        document: vscode.TextDocument,
+        position: vscode.Position,
+        completionContext: ReturnType<typeof getCompletionContext>
+    ): vscode.Range | { inserting: vscode.Range; replacing: vscode.Range } {
+        const start = position.with({ character: completionContext.from });
+        const insertEnd = position.with({ character: completionContext.to });
+        return new vscode.Range(start, insertEnd);
+    }
+
+    private createAutoClosedBracketEdits(
+        document: vscode.TextDocument,
+        position: vscode.Position,
+        completionContext: ReturnType<typeof getCompletionContext>
+    ): vscode.TextEdit[] | undefined {
+        if (completionContext.replaceNextBracket) {
+            const lineLength = document.lineAt(position).text.length;
+            const replaceEnd = position.with({ character: Math.min(lineLength, completionContext.to + 1) });
+            return [vscode.TextEdit.delete(new vscode.Range(position, replaceEnd))];
         }
-
-        return usedParams;
+        return undefined;
     }
 
     private createKeywordDocumentation(keyword: Keyword): string {
@@ -219,7 +241,7 @@ export class KeywordCompletionProvider implements vscode.CompletionItemProvider 
 
     resolveCompletionItem(
         item: vscode.CompletionItem,
-        token: vscode.CancellationToken
+        _token: vscode.CancellationToken
     ): vscode.ProviderResult<vscode.CompletionItem> {
         return item;
     }

@@ -2,28 +2,72 @@ import * as vscode from 'vscode';
 import { KeywordProvider } from './keywordProvider';
 import { KeywordCompletionProvider } from './completionProvider';
 import { KeywordEditorProvider } from './keywordEditor';
-import { KeywordTreeProvider, CategoryTreeItem, KeywordTreeItem } from './keywordTreeProvider';
+import { KeywordTreeProvider, KeywordTreeItem } from './keywordTreeProvider';
+import {
+    DslDefinitionProvider,
+    DslDiagnosticsManager,
+    DslHoverProvider,
+    WorkspaceDslIndex
+} from './languageFeatures';
+import { DslExecutionController } from './executionController';
+import { DslConfigSelectionController } from './configSelectionController';
 
 let keywordProvider: KeywordProvider;
 let keywordEditor: KeywordEditorProvider;
 let keywordTreeProvider: KeywordTreeProvider;
+let workspaceIndex: WorkspaceDslIndex;
+let diagnosticsManager: DslDiagnosticsManager;
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('pytest-DSL扩展已激活');
 
     // 初始化关键字提供者
     keywordProvider = new KeywordProvider(context);
+    const configSelectionController = new DslConfigSelectionController(context);
+    workspaceIndex = new WorkspaceDslIndex(
+        keywordProvider,
+        (document) => document ? configSelectionController.getCompletionConfigPaths(document) : null
+    );
+    context.subscriptions.push(
+        configSelectionController,
+        configSelectionController.onDidChangeSelection(() => workspaceIndex.invalidate())
+    );
 
     // 注册自动补全提供者
-    const completionProvider = new KeywordCompletionProvider(keywordProvider);
+    const completionProvider = new KeywordCompletionProvider(keywordProvider, workspaceIndex);
+    const languageSelector = { scheme: 'file', language: 'pytest-dsl' };
     context.subscriptions.push(
         vscode.languages.registerCompletionItemProvider(
-            { scheme: 'file', language: 'pytest-dsl' },
+            languageSelector,
             completionProvider,
             '[', // 触发字符
-            ','  // 参数分隔符
+            ',', // 参数分隔符
+            '$',
+            '{',
+            '@'
         )
     );
+    context.subscriptions.push(
+        vscode.languages.registerHoverProvider(
+            languageSelector,
+            new DslHoverProvider(keywordProvider, workspaceIndex)
+        )
+    );
+    context.subscriptions.push(
+        vscode.languages.registerDefinitionProvider(
+            languageSelector,
+            new DslDefinitionProvider(workspaceIndex)
+        )
+    );
+
+    diagnosticsManager = new DslDiagnosticsManager(keywordProvider, workspaceIndex);
+    diagnosticsManager.activate(context);
+    context.subscriptions.push(diagnosticsManager);
+
+    // 对齐 Electron GUI 的 workbench 协议：整文件运行、步进调试和结构化事件。
+    const executionController = new DslExecutionController(context, configSelectionController);
+    executionController.registerCodeLens(languageSelector);
+    context.subscriptions.push(executionController);
 
     // 注册关键字编辑器
     keywordEditor = new KeywordEditorProvider(context, keywordProvider);
@@ -118,6 +162,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(event => {
             if (event.affectsConfiguration('pytest-dsl')) {
+                workspaceIndex.invalidate();
                 keywordProvider.refreshKeywords();
                 keywordTreeProvider.refresh();
             }

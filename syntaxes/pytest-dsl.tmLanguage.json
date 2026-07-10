@@ -9,6 +9,9 @@
         "include": "#metadata"
       },
       {
+        "include": "#resource-functions"
+      },
+      {
         "include": "#remote-calls"
       },
       {
@@ -49,7 +52,7 @@
         "patterns": [
           {
             "name": "meta.annotation.pytest-dsl",
-            "match": "^@(name|description|tags|author|date|remote):",
+            "match": "^@(name|description|tags|author|date|remote|import|data):",
             "captures": {
               "1": {
                 "name": "keyword.other.annotation.pytest-dsl"
@@ -67,6 +70,40 @@
                 "name": "variable.other.alias.pytest-dsl"
               }
             }
+          }
+        ]
+      },
+      "resource-functions": {
+        "patterns": [
+          {
+            "name": "meta.function.resource.pytest-dsl",
+            "begin": "^\\s*(function)\\s+([^\\(]+)\\s*\\(",
+            "end": "\\)\\s+(do)\\s*$",
+            "beginCaptures": {
+              "1": {
+                "name": "keyword.control.function.pytest-dsl"
+              },
+              "2": {
+                "name": "entity.name.function.resource.pytest-dsl"
+              }
+            },
+            "endCaptures": {
+              "1": {
+                "name": "keyword.control.do.pytest-dsl"
+              }
+            },
+            "patterns": [
+              {
+                "name": "variable.parameter.resource.pytest-dsl",
+                "match": "[a-zA-Z_\\u4e00-\\u9fff][a-zA-Z0-9_\\u4e00-\\u9fff-]*(?=\\s*(?:=|,|\\)))"
+              },
+              {
+                "include": "#strings"
+              },
+              {
+                "include": "#numbers"
+              }
+            ]
           }
         ]
       },
@@ -195,7 +232,7 @@
           },
           {
             "name": "variable.other.assignment.pytest-dsl",
-            "match": "^\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*=(?!\\s*(?:\\w+\\|)?\\[)",
+            "match": "^\\s*([a-zA-Z_\\u4e00-\\u9fff][a-zA-Z0-9_\\u4e00-\\u9fff-]*)\\s*=(?!\\s*(?:\\w+\\|)?\\[)",
             "captures": {
               "1": {
                 "name": "variable.other.pytest-dsl"

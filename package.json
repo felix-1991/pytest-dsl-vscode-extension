@@ -2,7 +2,7 @@
   "name": "pytest-dsl-support",
   "displayName": "pytest-DSL Support",
   "description": "VSCode extension for pytest-DSL language support with keyword completion and UI editor",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "felix-1991",
   "repository": {
     "type": "git",
@@ -24,7 +24,7 @@
   ],
   "keywords": [
     "pytest",
-    "dsl", 
+    "dsl",
     "testing",
     "automation",
     "python",
@@ -47,6 +47,12 @@
     "onCommand:pytest-dsl.searchKeywords",
     "onCommand:pytest-dsl.filterByCategory",
     "onCommand:pytest-dsl.insertKeywordWithParams",
+    "onCommand:pytest-dsl.runFile",
+    "onCommand:pytest-dsl.debugFile",
+    "onCommand:pytest-dsl.debugFromCursor",
+    "onCommand:pytest-dsl.selectConfig",
+    "onCommand:pytest-dsl.runFileWithConfig",
+    "onCommand:pytest-dsl.debugFileWithConfig",
     "onView:pytest-dsl-keywords"
   ],
   "main": "./out/extension.js",
@@ -54,8 +60,15 @@
     "languages": [
       {
         "id": "pytest-dsl",
-        "aliases": ["pytest-DSL", "dsl"],
-        "extensions": [".dsl", ".auto"],
+        "aliases": [
+          "pytest-DSL",
+          "dsl"
+        ],
+        "extensions": [
+          ".dsl",
+          ".auto",
+          ".resource"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -130,6 +143,72 @@
         "command": "pytest-dsl.toggleFavorite",
         "title": "切换收藏状态",
         "icon": "$(star)"
+      },
+      {
+        "command": "pytest-dsl.runFile",
+        "title": "运行当前文件",
+        "category": "pytest-DSL",
+        "icon": "$(run)"
+      },
+      {
+        "command": "pytest-dsl.debugFile",
+        "title": "调试当前文件",
+        "category": "pytest-DSL",
+        "icon": "$(debug-alt)"
+      },
+      {
+        "command": "pytest-dsl.debugFromCursor",
+        "title": "从当前行开始调试",
+        "category": "pytest-DSL",
+        "icon": "$(debug-start)"
+      },
+      {
+        "command": "pytest-dsl.debugNext",
+        "title": "调试：下一步",
+        "category": "pytest-DSL",
+        "icon": "$(debug-step-over)"
+      },
+      {
+        "command": "pytest-dsl.debugContinue",
+        "title": "调试：继续",
+        "category": "pytest-DSL",
+        "icon": "$(debug-continue)"
+      },
+      {
+        "command": "pytest-dsl.stopExecution",
+        "title": "停止运行或调试",
+        "category": "pytest-DSL",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "pytest-dsl.selectConfig",
+        "title": "选择项目运行配置",
+        "category": "pytest-DSL",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "pytest-dsl.refreshConfigs",
+        "title": "刷新项目配置文件",
+        "category": "pytest-DSL",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "pytest-dsl.manageConfigProfiles",
+        "title": "管理配置方案",
+        "category": "pytest-DSL",
+        "icon": "$(symbol-enum)"
+      },
+      {
+        "command": "pytest-dsl.runFileWithConfig",
+        "title": "使用配置运行当前文件…",
+        "category": "pytest-DSL",
+        "icon": "$(run-all)"
+      },
+      {
+        "command": "pytest-dsl.debugFileWithConfig",
+        "title": "使用配置调试当前文件…",
+        "category": "pytest-DSL",
+        "icon": "$(debug-alt-small)"
       }
     ],
     "views": {
@@ -137,7 +216,7 @@
         {
           "id": "pytest-dsl-keywords",
           "name": "pytest-DSL 关键字",
-          "when": "workspaceHasTask:pytest-dsl || resourceExtname == '.dsl' || resourceExtname == '.auto'"
+          "when": "workspaceHasTask:pytest-dsl || resourceExtname == '.dsl' || resourceExtname == '.auto' || resourceExtname == '.resource'"
         }
       ]
     },
@@ -147,161 +226,234 @@
         "contents": "未找到 pytest-DSL 关键字。\n[生成关键字文件](command:pytest-dsl.generateKeywordsFile)\n[刷新](command:pytest-dsl.refreshKeywords)"
       }
     ],
-          "menus": {
-        "view/title": [
-          {
-            "command": "pytest-dsl.searchKeywords",
-            "when": "view == pytest-dsl-keywords",
-            "group": "navigation@1"
-          },
-          {
-            "command": "pytest-dsl.filterByCategory",
-            "when": "view == pytest-dsl-keywords",
-            "group": "navigation@2"
-          },
-          {
-            "command": "pytest-dsl.refreshKeywords",
-            "when": "view == pytest-dsl-keywords",
-            "group": "navigation@3"
-          }
-        ],
-        "view/item/context": [
-          {
-            "command": "pytest-dsl.insertKeywordFromTree",
-            "when": "view == pytest-dsl-keywords && viewItem == keyword",
-            "group": "inline@1"
-          },
-          {
-            "command": "pytest-dsl.previewKeyword",
-            "when": "view == pytest-dsl-keywords && viewItem == keyword",
-            "group": "inline@2"
-          },
-          {
-            "command": "pytest-dsl.toggleFavorite",
-            "when": "view == pytest-dsl-keywords && viewItem == keyword",
-            "group": "inline@3"
-          },
-          {
-            "command": "pytest-dsl.insertKeywordFromTree",
-            "when": "view == pytest-dsl-keywords && viewItem == keyword",
-            "group": "actions@1"
-          },
-          {
-            "command": "pytest-dsl.previewKeyword",
-            "when": "view == pytest-dsl-keywords && viewItem == keyword",
-            "group": "actions@2"
-          },
-          {
-            "command": "pytest-dsl.editKeyword",
-            "when": "view == pytest-dsl-keywords && viewItem == keyword",
-            "group": "actions@3"
-          },
-          {
-            "command": "pytest-dsl.toggleFavorite",
-            "when": "view == pytest-dsl-keywords && viewItem == keyword",
-            "group": "favorites@1"
-          }
-        ],
-        "editor/context": [
-          {
-            "when": "resourceExtname == '.dsl' || resourceExtname == '.auto'",
-            "command": "pytest-dsl.showKeywords",
-            "group": "pytest-dsl"
-          },
-          {
-            "when": "resourceExtname == '.dsl' || resourceExtname == '.auto'",
-            "command": "pytest-dsl.insertKeyword",
-            "group": "pytest-dsl"
-          },
-          {
-            "when": "resourceExtname == '.dsl' || resourceExtname == '.auto'",
-            "command": "pytest-dsl.searchKeywords",
-            "group": "pytest-dsl"
-          },
-          {
-            "when": "resourceExtname == '.dsl' || resourceExtname == '.auto'",
-            "command": "pytest-dsl.insertKeywordWithParams",
-            "group": "pytest-dsl"
-          }
-        ],
-                 "commandPalette": [
-           {
-             "command": "pytest-dsl.showKeywords"
-           },
-           {
-             "command": "pytest-dsl.insertKeyword"
-           },
-           {
-             "command": "pytest-dsl.editKeyword"
-           },
-           {
-             "command": "pytest-dsl.refreshKeywords"
-           },
-           {
-             "command": "pytest-dsl.generateKeywordsFile"
-           },
-           {
-             "command": "pytest-dsl.searchKeywords"
-           },
-           {
-             "command": "pytest-dsl.filterByCategory"
-           },
-           {
-             "command": "pytest-dsl.insertKeywordWithParams"
-           },
-           {
-             "command": "pytest-dsl.insertKeywordFromTree",
-             "when": "false"
-           },
-           {
-             "command": "pytest-dsl.previewKeyword",
-             "when": "false"
-           },
-           {
-             "command": "pytest-dsl.toggleFavorite",
-             "when": "false"
-           }
-         ]
+    "menus": {
+      "view/title": [
+        {
+          "command": "pytest-dsl.searchKeywords",
+          "when": "view == pytest-dsl-keywords",
+          "group": "navigation@1"
+        },
+        {
+          "command": "pytest-dsl.filterByCategory",
+          "when": "view == pytest-dsl-keywords",
+          "group": "navigation@2"
+        },
+        {
+          "command": "pytest-dsl.refreshKeywords",
+          "when": "view == pytest-dsl-keywords",
+          "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "pytest-dsl.insertKeywordFromTree",
+          "when": "view == pytest-dsl-keywords && viewItem == keyword",
+          "group": "inline@1"
+        },
+        {
+          "command": "pytest-dsl.previewKeyword",
+          "when": "view == pytest-dsl-keywords && viewItem == keyword",
+          "group": "inline@2"
+        },
+        {
+          "command": "pytest-dsl.toggleFavorite",
+          "when": "view == pytest-dsl-keywords && viewItem == keyword",
+          "group": "inline@3"
+        },
+        {
+          "command": "pytest-dsl.insertKeywordFromTree",
+          "when": "view == pytest-dsl-keywords && viewItem == keyword",
+          "group": "actions@1"
+        },
+        {
+          "command": "pytest-dsl.previewKeyword",
+          "when": "view == pytest-dsl-keywords && viewItem == keyword",
+          "group": "actions@2"
+        },
+        {
+          "command": "pytest-dsl.editKeyword",
+          "when": "view == pytest-dsl-keywords && viewItem == keyword",
+          "group": "actions@3"
+        },
+        {
+          "command": "pytest-dsl.toggleFavorite",
+          "when": "view == pytest-dsl-keywords && viewItem == keyword",
+          "group": "favorites@1"
+        }
+      ],
+      "editor/context": [
+        {
+          "when": "editorLangId == pytest-dsl && (resourceExtname == '.dsl' || resourceExtname == '.auto') && !pytest-dsl.executionRunning",
+          "command": "pytest-dsl.runFile",
+          "group": "pytest-dsl@1"
+        },
+        {
+          "when": "editorLangId == pytest-dsl && (resourceExtname == '.dsl' || resourceExtname == '.auto') && !pytest-dsl.executionRunning",
+          "command": "pytest-dsl.runFileWithConfig",
+          "group": "pytest-dsl@1.1"
+        },
+        {
+          "when": "editorLangId == pytest-dsl && (resourceExtname == '.dsl' || resourceExtname == '.auto') && !pytest-dsl.executionRunning",
+          "command": "pytest-dsl.debugFile",
+          "group": "pytest-dsl@2"
+        },
+        {
+          "when": "editorLangId == pytest-dsl && (resourceExtname == '.dsl' || resourceExtname == '.auto') && !pytest-dsl.executionRunning",
+          "command": "pytest-dsl.debugFileWithConfig",
+          "group": "pytest-dsl@2.1"
+        },
+        {
+          "when": "editorLangId == pytest-dsl && (resourceExtname == '.dsl' || resourceExtname == '.auto') && !pytest-dsl.executionRunning",
+          "command": "pytest-dsl.debugFromCursor",
+          "group": "pytest-dsl@3"
+        },
+        {
+          "when": "resourceExtname == '.dsl' || resourceExtname == '.auto' || resourceExtname == '.resource'",
+          "command": "pytest-dsl.showKeywords",
+          "group": "pytest-dsl"
+        },
+        {
+          "when": "resourceExtname == '.dsl' || resourceExtname == '.auto' || resourceExtname == '.resource'",
+          "command": "pytest-dsl.insertKeyword",
+          "group": "pytest-dsl"
+        },
+        {
+          "when": "resourceExtname == '.dsl' || resourceExtname == '.auto' || resourceExtname == '.resource'",
+          "command": "pytest-dsl.searchKeywords",
+          "group": "pytest-dsl"
+        },
+        {
+          "when": "resourceExtname == '.dsl' || resourceExtname == '.auto' || resourceExtname == '.resource'",
+          "command": "pytest-dsl.insertKeywordWithParams",
+          "group": "pytest-dsl"
+        }
+      ],
+      "editor/title/run": [
+        {
+          "when": "editorLangId == pytest-dsl && (resourceExtname == '.dsl' || resourceExtname == '.auto') && !pytest-dsl.executionRunning",
+          "command": "pytest-dsl.runFile",
+          "group": "navigation@1"
+        },
+        {
+          "when": "editorLangId == pytest-dsl && (resourceExtname == '.dsl' || resourceExtname == '.auto') && !pytest-dsl.executionRunning",
+          "command": "pytest-dsl.debugFile",
+          "group": "navigation@2"
+        },
+        {
+          "when": "editorLangId == pytest-dsl && pytest-dsl.executionRunning",
+          "command": "pytest-dsl.stopExecution",
+          "group": "navigation@3"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "pytest-dsl.showKeywords"
+        },
+        {
+          "command": "pytest-dsl.insertKeyword"
+        },
+        {
+          "command": "pytest-dsl.editKeyword"
+        },
+        {
+          "command": "pytest-dsl.refreshKeywords"
+        },
+        {
+          "command": "pytest-dsl.generateKeywordsFile"
+        },
+        {
+          "command": "pytest-dsl.searchKeywords"
+        },
+        {
+          "command": "pytest-dsl.filterByCategory"
+        },
+        {
+          "command": "pytest-dsl.insertKeywordWithParams"
+        },
+        {
+          "command": "pytest-dsl.insertKeywordFromTree",
+          "when": "false"
+        },
+        {
+          "command": "pytest-dsl.previewKeyword",
+          "when": "false"
+        },
+        {
+          "command": "pytest-dsl.toggleFavorite",
+          "when": "false"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "pytest-dsl.showKeywords",
+        "key": "ctrl+alt+k",
+        "mac": "cmd+alt+k",
+        "when": "editorTextFocus && (resourceExtname == '.dsl' || resourceExtname == '.auto' || resourceExtname == '.resource')"
       },
-             "keybindings": [
-         {
-           "command": "pytest-dsl.showKeywords",
-           "key": "ctrl+alt+k",
-           "mac": "cmd+alt+k",
-           "when": "editorTextFocus && (resourceExtname == '.dsl' || resourceExtname == '.auto')"
-         },
-         {
-           "command": "pytest-dsl.insertKeyword",
-           "key": "ctrl+alt+i",
-           "mac": "cmd+alt+i",
-           "when": "editorTextFocus && (resourceExtname == '.dsl' || resourceExtname == '.auto')"
-         },
-         {
-           "command": "pytest-dsl.searchKeywords",
-           "key": "ctrl+alt+s",
-           "mac": "cmd+alt+s",
-           "when": "editorTextFocus && (resourceExtname == '.dsl' || resourceExtname == '.auto')"
-         },
-         {
-           "command": "pytest-dsl.insertKeywordWithParams",
-           "key": "ctrl+alt+t",
-           "mac": "cmd+alt+t",
-           "when": "editorTextFocus && (resourceExtname == '.dsl' || resourceExtname == '.auto')"
-         },
-         {
-           "command": "pytest-dsl.filterByCategory",
-           "key": "ctrl+alt+f",
-           "mac": "cmd+alt+f",
-           "when": "editorTextFocus && (resourceExtname == '.dsl' || resourceExtname == '.auto')"
-         }
-       ],
+      {
+        "command": "pytest-dsl.insertKeyword",
+        "key": "ctrl+alt+i",
+        "mac": "cmd+alt+i",
+        "when": "editorTextFocus && (resourceExtname == '.dsl' || resourceExtname == '.auto' || resourceExtname == '.resource')"
+      },
+      {
+        "command": "pytest-dsl.searchKeywords",
+        "key": "ctrl+alt+s",
+        "mac": "cmd+alt+s",
+        "when": "editorTextFocus && (resourceExtname == '.dsl' || resourceExtname == '.auto' || resourceExtname == '.resource')"
+      },
+      {
+        "command": "pytest-dsl.insertKeywordWithParams",
+        "key": "ctrl+alt+t",
+        "mac": "cmd+alt+t",
+        "when": "editorTextFocus && (resourceExtname == '.dsl' || resourceExtname == '.auto' || resourceExtname == '.resource')"
+      },
+      {
+        "command": "pytest-dsl.filterByCategory",
+        "key": "ctrl+alt+f",
+        "mac": "cmd+alt+f",
+        "when": "editorTextFocus && (resourceExtname == '.dsl' || resourceExtname == '.auto' || resourceExtname == '.resource')"
+      },
+      {
+        "command": "pytest-dsl.runFile",
+        "key": "ctrl+f5",
+        "mac": "ctrl+f5",
+        "when": "editorTextFocus && editorLangId == pytest-dsl && !pytest-dsl.executionRunning"
+      },
+      {
+        "command": "pytest-dsl.debugFile",
+        "key": "f5",
+        "when": "editorTextFocus && editorLangId == pytest-dsl && !pytest-dsl.executionRunning"
+      },
+      {
+        "command": "pytest-dsl.debugFromCursor",
+        "key": "alt+f5",
+        "when": "editorTextFocus && editorLangId == pytest-dsl && !pytest-dsl.executionRunning"
+      },
+      {
+        "command": "pytest-dsl.debugNext",
+        "key": "f10",
+        "when": "pytest-dsl.debugPaused"
+      },
+      {
+        "command": "pytest-dsl.debugContinue",
+        "key": "f5",
+        "when": "pytest-dsl.debugPaused"
+      },
+      {
+        "command": "pytest-dsl.stopExecution",
+        "key": "shift+f5",
+        "when": "pytest-dsl.executionRunning"
+      }
+    ],
     "configuration": {
       "title": "pytest-DSL",
       "properties": {
         "pytest-dsl.pythonPath": {
           "type": "string",
-          "default": "python",
-          "description": "Python解释器路径"
+          "default": "",
+          "description": "Python解释器路径（留空则优先使用项目 .venv/venv，再回退到系统 Python）"
         },
         "pytest-dsl.projectRoot": {
           "type": "string",
@@ -357,6 +509,35 @@
           "type": "number",
           "default": 50,
           "description": "搜索结果的最大数量"
+        },
+        "pytest-dsl.yamlVars": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "运行和调试时传给 pytest-dsl 的 YAML 变量文件（相对于项目目录或绝对路径）"
+        },
+        "pytest-dsl.configProfiles": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": "可复用的有序配置方案；键为方案名，值为按加载顺序排列的 YAML 文件"
+        },
+        "pytest-dsl.activeConfigProfile": {
+          "type": "string",
+          "default": "",
+          "description": "未在状态栏选择过配置时默认启用的配置方案名称"
+        },
+        "pytest-dsl.enableExecutionCodeLens": {
+          "type": "boolean",
+          "default": true,
+          "description": "在 DSL 文件中显示运行、调试和从当前步骤调试的 CodeLens"
         }
       }
     }
@@ -365,6 +546,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "test:unit": "npm run compile && node --test test/*.test.js",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",

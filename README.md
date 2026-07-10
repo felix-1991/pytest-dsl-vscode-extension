@@ -1,9 +1,15 @@
 # pytest-DSL VSCode 扩展
 
-[![Version](https://img.shields.io/badge/version-0.1.1-blue.svg)](https://github.com/felix-1991/pytest-dsl-vscode-extension)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)](https://github.com/felix-1991/pytest-dsl-vscode-extension)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-一个强大的VSCode扩展，为pytest-DSL语言提供全面的开发支持，包括语法高亮、智能补全、关键字管理和可视化编辑器。
+一个强大的VSCode扩展，为pytest-DSL语言提供全面的开发支持，包括语法高亮、智能补全、关键字管理、单文件运行和步进调试。
+
+> **最新版本：v0.3.0**
+>
+> 本次更新加入项目配置选择、运行与步进调试，并增强 `${...}` 变量补全、定义跳转和悬停信息。升级后可在变量上悬停查看当前生效值及其 YAML 来源。
+
+完整的运行、调试和配置说明见：[使用与配置指南](USAGE_AND_CONFIGURATION.md)。
 
 ## ✨ 主要功能
 
@@ -12,6 +18,34 @@
 - **智能补全**: 基于关键字库的自动补全
 - **关键字管理**: 分类浏览、搜索和收藏关键字
 - **可视化编辑**: 图形化界面编辑关键字
+- **单文件运行**: 在编辑器标题、右键菜单或 CodeLens 中直接运行当前 `.dsl/.auto` 文件
+- **步进调试**: 支持整文件调试、从当前步骤调试、下一步、继续、停止和当前行高亮
+- **变量悬停**: 悬停 `${...}` 变量时显示当前生效值、配置文件和行号
+
+### ▶️ 运行与调试
+
+- `Ctrl+F5`：运行当前文件
+- `F5`：开始调试；暂停时继续执行
+- `Alt+F5`：从光标所在行开始调试
+- `F10`：执行下一步
+- `Shift+F5`：停止当前任务
+
+扩展与 Pytest DSL Studio 共用 `pytest_dsl.workbench.runner` 调试协议。调试暂停时，当前 DSL 步骤会在编辑器中高亮，并在状态栏显示“单步 / 继续 / 停止”操作；标准输出、错误输出和关键字跟踪信息会写入 `pytest-DSL` 输出面板。
+
+运行前扩展会保存当前文件，并按“配置的解释器 → 项目 `.venv/venv` → 环境变量 → PATH”的顺序查找真正安装了 `pytest-dsl` workbench 的 Python。整文件执行仅支持 `.dsl` 和 `.auto`；`.resource` 继续作为定义/补全来源使用。
+
+### ⚙️ 项目配置选择
+
+打开 pytest-DSL 文件后，状态栏会显示 `Config: 自动` 或当前配置方案。点击它可以：
+
+- 自动扫描并多选 `config/**/*.yaml`、`config/**/*.yml`；
+- 切换可复用的配置方案；
+- 校验 YAML 语法并阻止使用错误配置；
+- 将选择记忆在当前 VS Code 工作区，不修改项目文件。
+
+“自动”表示不传递 `--yaml-vars`，继续使用 pytest-dsl 自身的默认配置发现规则。右键菜单和命令面板还提供“使用配置运行当前文件…”与“使用配置调试当前文件…”，可为单次执行临时选择配置而不改变项目默认值。
+
+配置选择同时作用于运行、调试、`${...}` 变量补全、悬停信息和定义跳转。多个文件按照界面显示或配置方案数组中的顺序传递，后加载的 YAML 可以覆盖前面的值。悬停变量时会显示最终生效值、来源文件及行号；如果 DSL 文件内存在同名赋值，则优先显示 DSL 内的值。
 
 ### 📊 关键字浏览器
 - **分层分类显示**: 按category自动分组（内置、自定义等）
@@ -36,6 +70,12 @@
 1. 在VSCode扩展市场搜索"pytest-DSL Support"
 2. 点击安装并重新加载VSCode
 3. 打开.dsl或.auto文件即可自动激活
+
+也可以安装仓库构建的 v0.3.0 VSIX：
+
+```bash
+code --install-extension pytest-dsl-support-0.3.0.vsix
+```
 
 ### 配置关键字文件
 扩展需要关键字JSON文件来提供智能功能。支持以下文件名：
@@ -119,6 +159,13 @@ HTTP请求[
   "pytest-dsl.enableAutoCompletion": true,
   "pytest-dsl.cacheTimeout": 300,
   "pytest-dsl.keywordsJsonPath": "",
+  "pytest-dsl.yamlVars": ["config/env.yaml"],
+  "pytest-dsl.configProfiles": {
+    "local": ["config/base.yaml", "config/local.yaml"],
+    "test": ["config/base.yaml", "config/test.yaml", "config/remote_servers.yaml"]
+  },
+  "pytest-dsl.activeConfigProfile": "local",
+  "pytest-dsl.enableExecutionCodeLens": true,
   "pytest-dsl.treeViewAutoExpand": true,
   "pytest-dsl.showParameterCount": true,
   "pytest-dsl.enableSmartInsert": true,
@@ -132,6 +179,10 @@ HTTP请求[
 - `enableAutoCompletion`: 启用自动补全
 - `cacheTimeout`: 关键字缓存超时时间（秒）
 - `keywordsJsonPath`: 关键字文件路径
+- `yamlVars`: 兼容的默认 YAML 文件列表；状态栏尚未选择过配置时生效
+- `configProfiles`: 可复用的有序配置方案
+- `activeConfigProfile`: 状态栏尚未选择过配置时默认启用的方案
+- `enableExecutionCodeLens`: 是否显示文件级运行/调试和步骤级“从此处调试”入口
 - `treeViewAutoExpand`: 自动展开收藏夹分类
 - `showParameterCount`: 显示参数数量
 - `enableSmartInsert`: 启用智能插入
@@ -146,6 +197,11 @@ HTTP请求[
 | 智能搜索 | `Ctrl+Alt+S` | `Cmd+Alt+S` |
 | 插入参数模板 | `Ctrl+Alt+T` | `Cmd+Alt+T` |
 | 分类筛选 | `Ctrl+Alt+F` | `Cmd+Alt+F` |
+| 运行当前文件 | `Ctrl+F5` | `Ctrl+F5` |
+| 调试 / 继续 | `F5` | `F5` |
+| 从当前行调试 | `Alt+F5` | `Alt+F5` |
+| 下一步 | `F10` | `F10` |
+| 停止 | `Shift+F5` | `Shift+F5` |
 
 ## 📋 支持的关键字格式
 
@@ -213,7 +269,18 @@ src/
 
 ## 📝 更新日志
 
-### v0.1.1 (最新)
+### v0.3.0（最新）
+
+- ✨ 新增 `.dsl/.auto` 单文件运行、步进调试和当前步骤高亮
+- ✨ 新增状态栏配置选择、配置方案和临时运行配置
+- ✨ `${...}` 变量支持基于当前配置的补全、悬停和定义跳转
+- ✨ 变量悬停显示当前生效值、来源文件、行号和覆盖信息
+- ✨ 支持 `.resource` 自定义关键字索引及 Python 关键字定义跳转
+- 🔧 默认优先使用项目 `.venv/venv` 加载关键字和执行 DSL
+- 🔧 多个 YAML 按配置顺序加载，后加载文件覆盖前面的同名变量
+- 🔧 修复 `${...}` 与 `[...]` 自动闭合场景中的重复括号问题
+
+### v0.1.1
 - ✨ 新增关键字分类浏览器
 - ✨ 添加收藏夹功能
 - ✨ 智能搜索和过滤

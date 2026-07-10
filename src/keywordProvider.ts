@@ -1,7 +1,14 @@
 import * as vscode from 'vscode';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
+import {
+    PythonTarget,
+    describePythonTarget,
+    resolvePythonTargets,
+    withPythonProcessEnv
+} from './pythonRuntimeResolver';
 
 export interface KeywordParameter {
     name: string;
@@ -52,12 +59,18 @@ export class KeywordProvider {
         return config.get<number>('cacheTimeout', 300) * 1000; // 转换为毫秒
     }
 
-    private getPythonPath(): string {
+    getPythonPath(): string {
         const config = vscode.workspace.getConfiguration('pytest-dsl');
-        return config.get<string>('pythonPath', 'python');
+        return config.get<string>('pythonPath', '');
     }
 
-    private getProjectRoot(): string {
+    getPythonTargets(): PythonTarget[] {
+        return resolvePythonTargets(this.getProjectRoot(), {
+            configuredPython: this.getPythonPath()
+        });
+    }
+
+    getProjectRoot(): string {
         const config = vscode.workspace.getConfiguration('pytest-dsl');
         const configuredRoot = config.get<string>('projectRoot', '');
         
@@ -122,17 +135,22 @@ export class KeywordProvider {
 
         try {
             const fileContent = fs.readFileSync(filePath, 'utf8');
-            const data: KeywordData = JSON.parse(fileContent);
-            
-            if (!data.keywords || !Array.isArray(data.keywords)) {
-                throw new Error('无效的关键字数据格式');
-            }
-
-            console.log(`从文件读取到 ${data.keywords.length} 个关键字: ${filePath}`);
-            return data.keywords;
+            const keywords = this.parseKeywordData(fileContent);
+            console.log(`从文件读取到 ${keywords.length} 个关键字: ${filePath}`);
+            return keywords;
         } catch (error) {
             throw new Error(`读取关键字文件失败: ${error}`);
         }
+    }
+
+    private parseKeywordData(jsonContent: string): Keyword[] {
+        const data: KeywordData = JSON.parse(jsonContent);
+
+        if (!data.keywords || !Array.isArray(data.keywords)) {
+            throw new Error('无效的关键字数据格式');
+        }
+
+        return data.keywords;
     }
 
     async getKeywords(): Promise<Keyword[]> {
@@ -166,34 +184,18 @@ export class KeywordProvider {
             return await this.readKeywordsFromFile();
         } catch (fileError) {
             console.log('从文件读取关键字失败:', fileError);
-            
-            // 检查是否是文件不存在的错误
+
             const jsonFilePath = this.getKeywordsJsonFilePath();
-            if (!fs.existsSync(jsonFilePath)) {
-                // 获取项目根目录用于错误提示
-                const projectRoot = this.getProjectRoot();
-                const possibleNames = [
-                    'pytest-dsl-keywords.json',
-                    'keywords.json', 
-                    'pytest_dsl_keywords.json',
-                    '.pytest-dsl-keywords.json'
-                ];
-                
-                const errorMessage = `未找到关键字JSON文件！\n\n请在项目根目录 (${projectRoot}) 下创建以下任一文件：\n${possibleNames.map(name => `- ${name}`).join('\n')}\n\n您可以使用命令面板中的"生成关键字JSON文件"功能来创建文件。`;
-                
-                vscode.window.showErrorMessage(errorMessage, '打开项目根目录', '生成关键字文件').then(selection => {
-                    if (selection === '打开项目根目录') {
-                        vscode.env.openExternal(vscode.Uri.file(projectRoot));
-                    } else if (selection === '生成关键字文件') {
-                        vscode.commands.executeCommand('pytest-dsl.generateKeywordsFile');
-                    }
-                });
-                
-                throw new Error(`未找到关键字JSON文件。请在项目根目录下创建关键字文件：${possibleNames.join(', ')}`);
+            if (fs.existsSync(jsonFilePath)) {
+                throw fileError;
             }
-            
-            // 如果是其他读取错误，直接抛出
-            throw fileError;
+
+            try {
+                return await this.executeKeywordCommand();
+            } catch (commandError) {
+                this.showKeywordSourceError(commandError);
+                throw commandError;
+            }
         }
     }
 
@@ -234,15 +236,18 @@ export class KeywordProvider {
     }
 
     async validateEnvironment(): Promise<boolean> {
-        // 只检查是否存在JSON文件
         const jsonFilePath = this.getKeywordsJsonFilePath();
         if (fs.existsSync(jsonFilePath)) {
             console.log('找到关键字JSON文件，环境验证通过');
             return true;
         }
 
-        console.log('未找到关键字JSON文件');
-        return false;
+        const targets = this.getPythonTargets();
+        const valid = targets.length > 0;
+        console.log(valid
+            ? `未找到关键字JSON文件，将尝试动态索引: ${targets.map(describePythonTarget).join(', ')}`
+            : '未找到关键字JSON文件，也未找到可用Python候选');
+        return valid;
     }
 
     // 新增方法：生成关键字JSON文件
@@ -281,49 +286,104 @@ export class KeywordProvider {
     }
 
     private async executeKeywordCommand(): Promise<Keyword[]> {
-        return new Promise((resolve, reject) => {
-            const pythonPath = this.getPythonPath();
-            const projectRoot = this.getProjectRoot();
-            
-            // 构建命令
-            const command = `cd "${projectRoot}" && ${pythonPath} -m pytest_dsl.cli list-keywords --format json`;
-            
-            console.log('执行命令:', command);
+        const projectRoot = this.getProjectRoot();
+        const targets = this.getPythonTargets();
+        const errors: string[] = [];
 
-            exec(command, { 
+        for (const target of targets) {
+            try {
+                return await this.executeKeywordCommandWithTarget(projectRoot, target);
+            } catch (error) {
+                const message = `${describePythonTarget(target)}: ${error}`;
+                errors.push(message);
+                if (target.required) {
+                    break;
+                }
+            }
+        }
+
+        throw new Error(
+            `执行 pytest-dsl 关键字索引失败。\n已尝试:\n${errors.map((item) => `- ${item}`).join('\n') || '- 无可用Python候选'}\n\n请确保项目 .venv/venv 或配置的 Python 中已安装 pytest-dsl。`
+        );
+    }
+
+    private async executeKeywordCommandWithTarget(projectRoot: string, target: PythonTarget): Promise<Keyword[]> {
+        return new Promise((resolve, reject) => {
+            console.log('执行关键字索引:', describePythonTarget(target));
+            const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pytest-dsl-keywords-'));
+            const outputFile = path.join(tempDir, 'keywords.json');
+
+            const cleanupTempDir = () => {
+                try {
+                    fs.rmSync(tempDir, { recursive: true, force: true });
+                } catch (cleanupError) {
+                    console.warn('清理关键字索引临时文件失败:', cleanupError);
+                }
+            };
+
+            execFile(target.command, [
+                ...target.args,
+                '-m',
+                'pytest_dsl.cli',
+                'list-keywords',
+                '--format',
+                'json',
+                '--output',
+                outputFile
+            ], {
                 cwd: projectRoot,
+                env: withPythonProcessEnv(process.env),
                 timeout: 30000, // 30秒超时
                 maxBuffer: 1024 * 1024 * 10 // 10MB缓冲区
             }, (error, stdout, stderr) => {
                 if (error) {
                     console.error('命令执行错误:', error);
+                    console.error('stdout:', stdout);
                     console.error('stderr:', stderr);
-                    reject(new Error(`执行pytest-dsl-list失败: ${error.message}\n\n请确保：\n1. Python环境中已安装pytest-dsl\n2. 当前目录是pytest-dsl项目根目录\n3. pytest-dsl-list命令可用`));
+                    cleanupTempDir();
+                    reject(new Error(stderr || stdout || error.message));
                     return;
                 }
 
                 try {
-                    // 查找JSON开始位置（跳过可能的日志输出）
-                    const jsonStart = stdout.indexOf('{');
-                    if (jsonStart === -1) {
-                        throw new Error('未找到有效的JSON输出');
+                    if (!fs.existsSync(outputFile)) {
+                        const details = [stdout, stderr].map((item) => item.trim()).filter(Boolean).join('\n');
+                        throw new Error(`未找到关键字JSON输出文件${details ? `\n${details}` : ''}`);
                     }
 
-                    const jsonOutput = stdout.substring(jsonStart);
-                    const data: KeywordData = JSON.parse(jsonOutput);
-                    
-                    if (!data.keywords || !Array.isArray(data.keywords)) {
-                        throw new Error('无效的关键字数据格式');
-                    }
+                    const jsonOutput = fs.readFileSync(outputFile, 'utf8');
+                    const keywords = this.parseKeywordData(jsonOutput);
 
-                    console.log(`通过命令获取到 ${data.keywords.length} 个关键字`);
-                    resolve(data.keywords);
+                    console.log(`通过命令获取到 ${keywords.length} 个关键字`);
+                    resolve(keywords);
                 } catch (parseError) {
                     console.error('解析JSON失败:', parseError);
                     console.error('原始输出:', stdout);
                     reject(new Error(`解析关键字数据失败: ${parseError}`));
+                } finally {
+                    cleanupTempDir();
                 }
             });
+        });
+    }
+
+    private showKeywordSourceError(error: any): void {
+        const projectRoot = this.getProjectRoot();
+        const possibleNames = [
+            'pytest-dsl-keywords.json',
+            'keywords.json',
+            'pytest_dsl_keywords.json',
+            '.pytest-dsl-keywords.json'
+        ];
+
+        const errorMessage = `未能加载 pytest-dsl 关键字。\n\n已尝试项目关键字JSON文件和动态 pytest-dsl 索引。\n项目目录: ${projectRoot}\n\n可创建以下任一文件作为缓存：\n${possibleNames.map(name => `- ${name}`).join('\n')}\n\n动态索引错误：${error}`;
+
+        vscode.window.showErrorMessage(errorMessage, '打开项目根目录', '生成关键字文件').then(selection => {
+            if (selection === '打开项目根目录') {
+                vscode.env.openExternal(vscode.Uri.file(projectRoot));
+            } else if (selection === '生成关键字文件') {
+                vscode.commands.executeCommand('pytest-dsl.generateKeywordsFile');
+            }
         });
     }
 }
